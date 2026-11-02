@@ -73,6 +73,7 @@ def plot(
     chi2: bool = False,  # Calculate and display chi2 of data to total shapes
     chi2_nocorr: bool = False,  # Calculate and display chi2 of data to total shape
     residuals: bool = False,  # Calculated and display chi2 of data to total shapes
+    poi_text: str | None = None,  # Fitted-parameter text drawn under the postfit legend (no ROOT needed)
 ) -> tuple:
     ####
     # import inspect
@@ -606,7 +607,22 @@ def plot(
         leg.set_title(title=fit_type.capitalize(), prop={"size": "small"})
     else:
         # Don't write postfit to save space, just print r
-        if fitDiag_root is None:
+        if poi_text:
+            # Caller-supplied fit results (e.g. MultiDimFit profiled errors)
+            leg.set_title(title="Postfit", prop={"size": "small"})
+            fig.canvas.draw()
+            bbox = leg.get_window_extent().transformed(ax.transAxes.inverted())
+            ax.text(
+                bbox.xmin + bbox.width / 2,
+                bbox.ymin,
+                poi_text,
+                fontsize="x-small",
+                ha="center",
+                va="top",
+                transform=ax.transAxes,
+            )
+            ax.set_ylim(None, ax.get_ylim()[-1] * 1.15)
+        elif fitDiag_root is None:
             leg.set_title(title="Postfit", prop={"size": "small"})
         else:
             # Write signal strengths
@@ -685,7 +701,10 @@ def plot(
             frameon=False,
         )
         ax.add_artist(at)
-        hep.plot.yscale_anchored_text(ax, soft_fail=True)
+        try:
+            getattr(hep.plot, "yscale_anchored_text", lambda *a, **kw: None)(ax, soft_fail=True)
+        except AttributeError:
+            pass
 
     # Fit info
     if (chi2 or chi2_nocorr) and not blind:
@@ -740,7 +759,7 @@ def plot(
             frameon=False,
         )
         rax.add_artist(at)
-        hep.plot.yscale_anchored_text(rax, soft_fail=True)
+        getattr(hep.plot, "yscale_anchored_text", lambda *a, **kw: None)(rax, soft_fail=True)
 
     ax.set_ylim(0, ax.get_ylim()[-1] * 1.05)
 
@@ -801,7 +820,7 @@ def plot(
         )
         resid_ax.xaxis.minorticks_off()
         resid_ax.tick_params(top=False)
-        hep.plot.yscale_anchored_text(resid_ax, soft_fail=True)
+        getattr(hep.plot, "yscale_anchored_text", lambda *a, **kw: None)(resid_ax, soft_fail=True)
 
     logging.debug(f"  DEBUG: Main plotting done")
     return fig, (ax, rax)

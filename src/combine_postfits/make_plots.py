@@ -279,6 +279,14 @@ def main():
         help="Hide zeroth tick on the y-axis.",
     )
     parser_styling.add_argument(
+        "--poi-text",
+        dest="poi_text",
+        default=None,
+        type=str,
+        help="Text drawn under the postfit legend, e.g. fitted POIs; '\\n' separates lines. "
+        "Overrides the values read from fitDiagnostics (works with --noroot).",
+    )
+    parser_styling.add_argument(
         "--dpi",
         default=300,
         type=int,
@@ -607,6 +615,7 @@ def main():
                     chi2=args.chi2,
                     chi2_nocorr=args.chi2_nocorr,
                     residuals=args.residuals,
+                    poi_text=args.poi_text.replace("\\n", "\n") if args.poi_text else None,
                 )
                 if fig is None:
                     return None
